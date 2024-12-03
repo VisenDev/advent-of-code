@@ -4,34 +4,50 @@
   (unless (and num last-num) (return-from  calculate-direction nil))
   (if (< num last-num) :ascending :descending))
 
-(defun count-errors-in-line (nums)
-  (let
-      ((direction (calculate-direction (first nums) (second nums)))
-       (error-count 0)
-       )
-    (reduce #'(lambda(a b)
+(defun remove-nth (n sequence)
+  (reduce #'cons
+          (subseq sequence 0 n)
+          :initial-value (subseq sequence (1+ n))
+          :from-end t))
 
+(defun error-in-line? (nums)
+  (let
+      ((direction (calculate-direction (first nums) (second nums))))
+    (reduce #'(lambda(a b)
                 (let ((diff (abs (- a b))))
                 (if (not (eql direction (calculate-direction a b)))
-                    (incf error-count)
+                    (return-from error-in-line? t)
                     (when (or (< diff 1) (> diff 3))
-                      (incf error-count))))
-                b)
+                    (return-from error-in-line? t)))
+                b))
             nums)
-    error-count))
+    nil))
 
+(defun line-valid? (nums)
+  (not (error-in-line? nums)))
+
+(defun generate-variations-removing-1 (nums)
+  (loop for index from 0
+        for num in nums
+        collect (remove-nth index nums)))
+
+(defun any-variations-valid? (nums)
+  (when (line-valid? nums)
+    (return-from any-variations-valid? t))
+  (some #'identity (mapcar #'line-valid? (generate-variations-removing-1 nums))))
+
+(defun parse-numbers ()
+  (loop for line in (uiop:read-file-lines *data-file*)
+        collect (mapcar #'parse-integer (uiop:split-string line))))
     
 ;;;Part I
-(defun check-safety (num-errors-allowed)
-  (loop for line in (uiop:read-file-lines *data-file*)
-        for nums = (mapcar #'parse-integer (uiop:split-string line))
-        sum (if (<= 0 (- num-errors-allowed (count-errors-in-line nums)))
-                1
-                0)))
+(defun check-safety ()
+  (loop for nums in (parse-numbers)
+        sum (if (error-in-line? nums) 0 1)))
 
 
 ;;;;Part II
-;(defun check-safety-correct-errors ()
-;  (loop for line in (uiop:read-file-lines *data-file*)
-;        sum (check-line-safety
-;             (mapcar #'parse-integer (uiop:split-string line)) 1)))
+(defun check-safety-correct-errors ()
+  (loop for nums in (parse-numbers)
+        sum
+        (if (any-variations-valid? nums) 1 0)))
