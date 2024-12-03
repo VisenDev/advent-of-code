@@ -37,7 +37,7 @@
   (some #'identity (mapcar #'line-valid? (generate-variations-removing-1 nums))))
 
 (defun parse-numbers ()
-  (loop for line in (uiop:read-file-lines *data-file*)
+ (loop for line in (uiop:read-file-lines *data-file*)
         collect (mapcar #'parse-integer (uiop:split-string line))))
     
 ;;;Part I
