@@ -126,6 +126,7 @@
                     (search "XMAS" string :start2 i))
             1 0)))
         
+;;Part I
 (defun count-all-xmas-in-strings (input-strings)
   (loop
     :for strings in (apply-transforms input-strings)
@@ -133,3 +134,48 @@
           :for string in strings
           :sum (count-xmas-in-string string))))
                     
+
+(defun extract-3x3 (strings top-left-x top-left-y)
+  "extract a 3x3 list from a list of strings"
+  (loop
+    :for y from top-left-y below (+ 3 top-left-y)
+    :for string = (nth y strings)
+    :collect (subseq string top-left-x (+ 3 top-left-x))))
+
+(defun remove-irrelevant-indexes (string)
+  (let*
+      ((indexes '(7 5 3 1))
+       )
+    (loop
+      :for i in indexes
+      :do (setf string (remove-if #'identity string :start i :count 1))
+      )
+    string))
+
+(defun valid-x-mas-string? (string)
+  "accepts a 5 letter string and returns whether it is a valid x-mas"
+  (let*
+      ((x-mas-strings '("MMASS" "SMASM" "MSAMS" "SSAMM")))
+    (member string x-mas-strings :test #'string=)))
+  
+
+(defun x-mas-in-3x3? (3x3)
+  "searchs a 3x3 list of strings for x mas"
+  (if (valid-x-mas-string?
+       (remove-irrelevant-indexes (apply #'concatenate 'string 3x3)))
+      t nil))
+
+;;; Part II
+(defun find-x-mas-in-strings (strings)
+  (loop
+    :for y from 0 below (- (length strings) 2)
+    :sum
+    (loop
+      :for x from 0 below (- (length (nth y strings)) 2)
+      :sum
+      (progn 
+      (if (x-mas-in-3x3? (extract-3x3 strings x y))
+          1
+          0)))))
+      
+  
