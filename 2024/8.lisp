@@ -41,21 +41,6 @@
                   (push antenna result))))
     result))
 
-;;(declaim (ftype (function (integer integer) integer) diff))
-;;(defun diff (a b)
-;;  (- a b))
-;;
-;;(defun calculate-offset (antenna-a antenna-b)
-;;  "returns the difference in x and y coordinates"
-;;  (destructuring-bind ((ach ax ay) (bch bx by))
-;;      (list antenna-a antenna-b)
-;;    (declare (ignore ach bch))
-;;    (list
-;;     (- ax bx)
-;;     (- ay by))))
-
-;;(defun antinode-offset
-
 (defun within-bounds? (x y width height)
       (and (>= x 0)
            (< x width)
@@ -79,13 +64,6 @@
       (when (within-bounds? antinode-bx antinode-by width height)
         (push (list antinode-bx antinode-by) result))
       result)))
-  ;;(let*
-  ;;    ((a-offset (calculate-offset antenna-a antenna-b))
-  ;;     (a-double-offset (mapcar #'(lambda (num) (* 2 num)) offset))
-  ;;    ((b-offset (calculate-offset antenna-b antenna-b))
-  ;;     (b-double-offset (mapcar #'(lambda (num) (* 2 num)) offset))
-  ;;     )
-  ;;  (
 
 (defun record-antinodes (hashmap antenna matching-antenna width height)
   "returns a list of (x y) coordinates for antinodes"
@@ -94,10 +72,6 @@
     (dolist (antinode antinodes)
       (setf (gethash antinode hashmap) t))))
 
-              
-
-
-              
 
 (defun count-antinodes (map)
   (let*
@@ -114,5 +88,51 @@
           (record-antinodes result antenna match width height))))
     (hash-table-count result)))
 
+(defun solve-part-i() (count-antinodes *data*))
                           
 
+;;; Part II
+
+(defun calculate-antinodes-in-line (antenna-a antenna-b width height)
+  "returns a list of antinode coordinates"
+  (destructuring-bind ((tmp1 ax ay) (tmp2 bx by))
+      (list antenna-a antenna-b)
+    (declare (ignore tmp1 tmp2))
+    (let*
+        ((antinode-x-delta (- ax bx))
+         (antinode-y-delta (- ay by))
+         (result '())
+         )
+      (loop :for i from 0
+            :do (let*
+                    ((antinode-x (+ ax (* i antinode-x-delta)))
+                     (antinode-y (+ ay (* i antinode-y-delta)))
+                     )
+                  (if (within-bounds? antinode-x antinode-y width height)
+                      (push (list antinode-x antinode-y) result)
+                      (return-from calculate-antinodes-in-line result))))
+      )))
+
+(defun record-antinodes-in-line (hashmap antenna matching-antenna width height)
+  (let*
+      ((antinodes (calculate-antinodes-in-line antenna matching-antenna width height)))
+    (dolist (antinode antinodes)
+      (setf (gethash antinode hashmap) t))))
+
+(defun count-antinodes-in-line (map)
+  (let*
+      ((antennae (extract-antennae map))
+       (result (make-hash-table :test 'equalp))
+       (width (length (nth 0 map)))
+       (height (length map))
+       )
+    (dolist (antenna antennae)
+      (let* ((matches (find-matching-antennae antennae antenna))
+             )
+        (format t "matches: ~a~%" matches)
+        (dolist (match matches)
+          (record-antinodes-in-line result antenna match width height))))
+    (hash-table-count result)))
+
+(defun solve-part-ii ()
+  (count-antinodes-in-line *data*))
