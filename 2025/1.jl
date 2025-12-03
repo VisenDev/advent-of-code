@@ -1,7 +1,3 @@
-f = open("1.dat", "r")
-strs = split(read(f, String), "\n")
-close(f)
-
 mutable struct State 
     knob::Integer
     zero_count::Integer
@@ -24,12 +20,21 @@ function rotate(s::State, increment::Integer, times::Integer)
     end
 end
 
-state = State(50, 0)
 
-for str in strs
-    dir = str[1]
-    num = parse(Int32, str[2:end])
-    rotate(state, dir == 'L' ? -1 : 1, num)
+function main()
+    f = open("1.dat", "r")
+    strs = split(read(f, String), "\n")
+    close(f)
+
+    state = State(50, 0)
+
+    for str in strs
+        dir = str[1]
+        num = parse(Int32, str[2:end])
+        rotate(state, dir == 'L' ? -1 : 1, num)
+    end
+
+    print(state.zero_count)
 end
 
-print(state.zero_count)
+main()
